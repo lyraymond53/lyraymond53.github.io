@@ -10,7 +10,8 @@ window.addEventListener('load', init, false);
 function init() {
 	// Initialize the scene, the camera and the renderer
 	createScene();
-
+	makePoint();
+	animate();
 }
 
 var scene,
@@ -77,3 +78,19 @@ function handleWindowResize() {
 	camera.aspect = WIDTH / HEIGHT;
 	camera.updateProjectionMatrix();
 }
+
+function makePoint() {
+	var dotGeometry = new THREE.Geometry();
+	dotGeometry.vertices.push(new THREE.Vector3(0, 0, 0));
+	var dotMaterial = new THREE.PointsMaterial({ size: 1, sizeAttenuation: false });
+	var dot = new THREE.Points(dotGeometry, dotMaterial);
+	scene.add(dot);
+}
+
+
+
+function animate() {
+	renderer.render(scene, camera);
+	requestAnimationFrame(animate);
+}
+

@@ -10,7 +10,9 @@ window.addEventListener('load', init, false);
 function init() {
 	// Initialize the scene, the camera and the renderer
 	createScene();
-	makePoint();
+	createPoint();
+	createSea();
+
 	animate();
 }
 
@@ -45,7 +47,7 @@ function createScene() {
 	// Set the position of the camera
 	camera.position.x = 0;
 	camera.position.z = 200;
-	camera.position.y = 100;
+	camera.position.y = 0;
 
 	// Create the renderer
 	renderer = new THREE.WebGLRenderer({
@@ -79,17 +81,70 @@ function handleWindowResize() {
 	camera.updateProjectionMatrix();
 }
 
-function makePoint() {
-	var dotGeometry = new THREE.Geometry();
-	dotGeometry.vertices.push(new THREE.Vector3(0, 0, 0));
-	var dotMaterial = new THREE.PointsMaterial({ size: 1, sizeAttenuation: false });
-	var dot = new THREE.Points(dotGeometry, dotMaterial);
-	scene.add(dot);
+function createPoint() {
+	var pointGeometry = new THREE.SphereGeometry(2, 16, 16);
+	var pointMaterial = new THREE.MeshBasicMaterial({ color: 0xffff00 });
+	var point3D = new THREE.Mesh(pointGeometry, pointMaterial);
+
+	scene.add(point3D);
+}
+
+function createSea() {
+	sea = new Sea();
+
+	// push it a little bit at the bottom of the scene
+	sea.mesh.position.y = -600;
+
+	// add the mesh of the sea to the scene
+	scene.add(sea.mesh);
 }
 
 
+Sea = function () {
+	var geom = new THREE.CylinderGeometry(600, 600, 800, 40, 10);
+	geom.applyMatrix(new THREE.Matrix4().makeRotationX(-Math.PI / 2));
+
+	// important: by merging vertices we ensure the continuity of the waves
+	geom.mergeVertices();
+
+	// get the vertices
+	var l = geom.vertices.length;
+
+	// create an array to store new data associated to each vertex
+	this.waves = [];
+
+	for (var i = 0; i < l; i++) {
+		// get each vertex
+		var v = geom.vertices[i];
+
+		// store some data associated to it
+		this.waves.push({
+			y: v.y,
+			x: v.x,
+			z: v.z,
+			// a random angle
+			ang: Math.random() * Math.PI * 2,
+			// a random distance
+			amp: 5 + Math.random() * 15,
+			// a random speed between 0.016 and 0.048 radians / frame
+			speed: 0.016 + Math.random() * 0.032
+		});
+	};
+	var mat = new THREE.MeshPhongMaterial({
+		color: Colors.blue,
+		transparent: true,
+		opacity: .8,
+		shading: THREE.FlatShading,
+	});
+
+	this.mesh = new THREE.Mesh(geom, mat);
+	this.mesh.receiveShadow = true;
+
+}
 
 function animate() {
+	sea.mesh.rotation.z += .005;
+
 	renderer.render(scene, camera);
 	requestAnimationFrame(animate);
 }
